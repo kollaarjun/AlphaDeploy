@@ -1,4 +1,4 @@
 ---
- - hosts: server
+ - hosts: AlphaServer
    roles:
    - deploy_server
