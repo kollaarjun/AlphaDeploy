@@ -1,0 +1,95 @@
+---
+# tasks file for deploy
+ - name: Install list of packages for AlphaClients.
+   become: yes
+   apt:
+     name: "{{ item }}"
+     state: installed
+     with_items:
+          - auditd
+          - lsyncd
+          - inotify-tools
+     notify:
+          - restart auditd
+
+ - name: Create config directory for lsyncd
+   file:
+     path: /etc/lsyncd
+     state: directory
+     owner: root
+     group: root
+
+ - name: Copy lsyncd.conf.lua to Alpha Client1
+   template:
+     src: files/lsyncd.conf_c1.lua
+     dest: /etc/lsyncd/lsyncd.conf.lua
+     owner: root
+     group: root
+     mode: 0644
+     
+ - name: Copy lsyncd.conf.lua to Alpha Client2
+   template:
+     src: files/lsyncd.conf_c2.lua
+     dest: /etc/lsyncd/lsyncd.conf.lua
+     owner: root
+     group: root
+     mode: 0644
+ 
+ - name: Create lsynd-exclude file
+   template: 
+     src: files/lsynd-exclude.txt
+     dest: /etc/lsyncd/lsynd-exclude.txt
+     owner: root
+     group: root
+     mode: 0644
+ 
+ - name: Ensure private key and public keys are present
+   copy: 
+     src: "{{ items }}" 
+     dest: /home/ubuntu/.ssh/
+     mode: 0600
+     with_items:
+        - files/id_dsa.pub
+        - files/id_dsa
+
+ - name: Start lsyncd 
+   become: yes
+   command: /usr/bin/lsyncd /etc/lsyncd/lsyncd.conf.lua
+
+
+ - name: Create scripts directory for lsyncd
+   file:
+     path: /etc/home/ubuntu/scripts
+     state: directory
+     owner: ubuntu
+     group: ubuntu
+   
+ - name: Copy scripts to remote client2
+   template:
+     src: files/ssheventsc1.sh
+     dest: /home/ubuntu/scripts/sshevents.sh
+     owner: root
+     group: root
+     mode: 0644
+     when: inventory_hostname == "host2"
+
+ - name: Copy scripts to remote client2
+   template:
+     src: files/ssheventsc2.sh
+     dest: /home/ubuntu/scripts/sshevents.sh
+     owner: root
+     group: root
+     mode: 0644
+     when: inventory_hostname == "host2"
+
+ - name: Copy scripts to remote client2
+   template:
+     src: files/eventtrigger.sh
+     dest: /home/ubuntu/scripts/
+     owner: root
+     group: root
+     mode: 0644
+
+ - name: Run the script
+   become: yes
+   command: /bin/bash /home/ubuntu/eventtrigger.sh

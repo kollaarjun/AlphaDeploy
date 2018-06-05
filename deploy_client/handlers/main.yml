@@ -1,0 +1,9 @@
+---
+# handlers file for deploy
+- name: stop auditd
+  become: yes
+  command: systemctl stop auditd
+
+- name: start auditd
+  become: yes
+  command: systemctl start auditd
