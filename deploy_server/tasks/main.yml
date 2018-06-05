@@ -1,2 +1,24 @@
 ---
 # tasks file for deploy_server
+ - name: Install list of packages for Alphaserver.
+   become: yes
+   apt:
+     name: "{{ item }}"
+     state: installed
+     with_items:
+          - apache2
+          - php7.0 
+          - libapache2-mod-php7.0 
+          - php7.0-mysql
+          - inotify-tools
+     notify:
+          - restart apache
+
+ - name: Copy PHP files to Alpha Server
+   become: yes
+   template:
+     src: files/list.php
+     dest: /var/www/html/list.php
+     owner: root
+     group: root
+     mode: 0644
